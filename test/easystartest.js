@@ -4,6 +4,53 @@ describe("EasyStar.js", function() {
 
   beforeEach(function() { });
 
+  describe("grid with array values", () => {
+      it("path contains unknown tile value", (done) => {
+          const easyStar = new EasyStar.js();
+          easyStar.enableGridArrayAsValues();
+          easyStar.setGrid(
+              [
+                  [[1], [0, 99], [0], [0], [0]],
+                  [[0], [1, 99], [1], [1], [0]],
+                  [[0], [0, 99], [0], [1], [0]],
+                  [[0], [0, 99], [0], [1], [0]],
+                  [[0], [0, 99], [0], [1], [1]]
+              ]
+          );
+
+          easyStar.setAcceptableTiles([1]);
+          easyStar.findPath(0,0,4,4,onPathFound);
+          easyStar.calculate();
+          function onPathFound(path) {
+              expect(path).toBeNull();
+              done()
+          }
+      });
+
+      it("path contains multiple known tile values", (done) => {
+          const easyStar = new EasyStar.js();
+          easyStar.enableGridArrayAsValues();
+          easyStar.setGrid(
+              [
+                  [[1], [1, 22], [0],     [0], [0]],
+                  [[0], [1, 22], [1, 33], [1], [0]],
+                  [[0], [0],     [0],     [1], [0]],
+                  [[0], [0],     [0],     [1], [0]],
+                  [[0], [0],     [0],     [1], [1]]
+              ]
+          );
+
+          easyStar.setAcceptableTiles([1, 22, 33]);
+          easyStar.findPath(0,0,4,4,onPathFound);
+          easyStar.calculate();
+          function onPathFound(path) {
+              expect(path).not.toBeNull();
+              expect(path.length).toEqual(9);
+              done()
+          }
+      });
+  });
+
   it("It should find a path successfully with corner cutting enabled.", function(done) {
     var easyStar = new EasyStar.js();
     easyStar.enableDiagonals();

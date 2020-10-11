@@ -34,6 +34,7 @@ EasyStar.js = function() {
     var iterationsPerCalculation = Number.MAX_VALUE;
     var acceptableTiles;
     var diagonalsEnabled = false;
+    var gridArrayAsValues = false;
 
     /**
     * Sets the collision grid that EasyStar uses.
@@ -79,6 +80,10 @@ EasyStar.js = function() {
      */
     this.disableDiagonals = function() {
         diagonalsEnabled = false;
+    }
+
+    this.enableGridArrayAsValues = function() {
+        gridArrayAsValues = true;
     }
 
     /**
@@ -239,11 +244,11 @@ EasyStar.js = function() {
     **/
     this.findPath = function(startX, startY, endX, endY, callback) {
         // Wraps the callback for sync vs async logic
-        var callbackWrapper = function(result) {
+        var callbackWrapper = function (result) {
             if (syncEnabled) {
                 callback(result);
             } else {
-                setTimeout(function() {
+                setTimeout(function () {
                     callback(result);
                 });
             }
@@ -260,13 +265,13 @@ EasyStar.js = function() {
 
         // Start or endpoint outside of scope.
         if (startX < 0 || startY < 0 || endX < 0 || endY < 0 ||
-        startX > collisionGrid[0].length-1 || startY > collisionGrid.length-1 ||
-        endX > collisionGrid[0].length-1 || endY > collisionGrid.length-1) {
+            startX > collisionGrid[0].length - 1 || startY > collisionGrid.length - 1 ||
+            endX > collisionGrid[0].length - 1 || endY > collisionGrid.length - 1) {
             throw new Error("Your start or end point is outside the scope of your grid.");
         }
 
         // Start and end are the same tile.
-        if (startX===endX && startY===endY) {
+        if (startX === endX && startY === endY) {
             callbackWrapper([]);
             return;
         }
@@ -274,10 +279,25 @@ EasyStar.js = function() {
         // End point is not an acceptable tile.
         var endTile = collisionGrid[endY][endX];
         var isAcceptable = false;
-        for (var i = 0; i < acceptableTiles.length; i++) {
-            if (endTile === acceptableTiles[i]) {
-                isAcceptable = true;
-                break;
+
+        // This means `endTile` is an <Array>, eg. [1, 0, 222, 222]
+        // Does `endTile` contain unaccepted tiles values?
+        if (gridArrayAsValues === true) {
+            isAcceptable = true;
+            for (var i = 0; i < endTile.length; i++) {
+                if (acceptableTiles.indexOf(endTile[i]) === -1) {
+                    isAcceptable = false;
+                    break;
+                }
+            }
+        } else {
+            // `endTile` is an <Integer>.
+            // Is `endTile` among accepted tiles values?
+            for (var i = 0; i < acceptableTiles.length; i++) {
+                if (endTile === acceptableTiles[i]) {
+                    isAcceptable = true;
+                    break;
+                }
             }
         }
 
@@ -478,11 +498,20 @@ EasyStar.js = function() {
             }
             if (!directionIncluded()) return false
         }
-        for (var i = 0; i < acceptableTiles.length; i++) {
-            if (collisionGrid[y][x] === acceptableTiles[i]) {
-                return true;
+
+        if (gridArrayAsValues) {
+            return collisionGrid[y][x].findIndex(function (val) {
+                return acceptableTiles.indexOf(val) === -1;
+            }) === -1;
+        } else {
+            for (var i = 0; i < acceptableTiles.length; i++) {
+                if (collisionGrid[y][x] === acceptableTiles[i]) {
+                    return true;
+                }
             }
         }
+
+
 
         return false;
     };
